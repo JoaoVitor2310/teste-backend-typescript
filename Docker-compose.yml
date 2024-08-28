@@ -18,11 +18,10 @@ services:
         - "3000:3000"
       depends_on:
         - db
-      environment:
-        - DB_HOST=db
-        - DB_USER=root
-        - DB_PASSWORD=password
-        - DB_NAME=teste-node-type
+      env_file: 
+      - .env
+      volumes:
+      - .:/app
 
 volumes:
   dbdata:
