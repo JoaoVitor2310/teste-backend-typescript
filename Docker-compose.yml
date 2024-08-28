@@ -1,0 +1,28 @@
+version: '3'
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: teste-node-type
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  app:
+      build: .
+      working_dir: /app
+      restart: unless-stopped
+      ports:
+        - "3000:3000"
+      depends_on:
+        - db
+      environment:
+        - DB_HOST=db
+        - DB_USER=root
+        - DB_PASSWORD=password
+        - DB_NAME=teste-node-type
+
+volumes:
+  dbdata:
