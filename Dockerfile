@@ -4,13 +4,12 @@ WORKDIR /app
 
 RUN apk update && apk upgrade && apk add git && apk add bash
 
-COPY ./package.json ./
+COPY ./package.json ./yarn.lock ./
 
-RUN npm install
+RUN yarn install
 
 COPY . .
 
 EXPOSE 3000
 
-
-CMD [ "npm", "run", "dev" ]
+CMD sh -c "npm rebuild esbuild && yarn dev"
