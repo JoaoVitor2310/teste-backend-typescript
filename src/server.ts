@@ -6,7 +6,7 @@ const server = express();
 server.use(express.json());
 
 server.get('/', (req, res) => {
-  res.send('Hello Worldee!');
+  res.send('Hello Worldeeeee!');
 })
 
 const startServer = async () => {
