@@ -1,13 +1,12 @@
 import express from "express";
 import sequelize from './config/database';
+import router from './routes';
 
 const server = express();
 
 server.use(express.json());
 
-server.get('/', (req, res) => {
-  res.send('Hello Worldeeeee!');
-})
+server.use('/', router);
 
 const startServer = async () => {
   try {
