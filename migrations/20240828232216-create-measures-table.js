@@ -13,6 +13,11 @@ module.exports = {
         allowNull: false,
         unique: true,
       },
+      measure_datetime: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.NOW, 
+      },
       createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
@@ -44,7 +49,7 @@ module.exports = {
         type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
-          model: 'clients',  // Nome da tabela referenciada (client model)
+          model: 'clients',
           key: 'id',
         },
         onDelete: 'CASCADE',
