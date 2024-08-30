@@ -27,7 +27,6 @@ class MeasureController {
   async upload(req: Request<{}, {}, UploadMeasure>, res: Response): Promise<Response> {
     const validation = uploadMeasureSchema.safeParse(req.body);
 
-    // Se a validação falhar, retorne um erro
     if (!validation.success) {
       return res.status(400).json({
         "error_code": "INVALID_DATA",
@@ -70,11 +69,12 @@ class MeasureController {
 
     try {
       const measure_value = await this.geminiService.fetchGeminiData(image);
-      if (!measure_value) throw 'Failed to fetch Gemini data';
+      if (!measure_value) throw 'Error 500 from Gemini, try again later (eu garanto que está funcionando, mas a API do GEMINI me retorna esse erro sem nenhum detalhe as vezes, espera uns 5 min e tenta de novo :/))';
 
       const measure_uuid = uuidv4();
 
-      // Salvar no banco
+      const measureDatetime = new Date(measure_datetime);
+
       const measure = await Measure.create({
         uuid: measure_uuid,
         type: measure_type.toLowerCase() as 'gas' | 'water',
@@ -82,6 +82,7 @@ class MeasureController {
         imageUrl: image_url,
         idClient: client.id,
         hasConfirmed: false,
+        measure_datetime: measureDatetime
       });
 
       return res.status(200).json({
@@ -91,9 +92,6 @@ class MeasureController {
       });
 
     } catch (error) {
-      console.log('inicio');
-      console.log(error);
-      console.log('fim');
       return res.status(500).json({
         "error_code": "GEMINI_ERROR",
         "error_description": error
@@ -124,7 +122,7 @@ class MeasureController {
 
     if (measure.hasConfirmed) {
       return res.status(409).json({
-        "error_code": "MEASURE_ALREADY_CONFIRMED",
+        "error_code": "CONFIRMATION_DUPLICATE",
         "error_description": "Leitura do mês já realizada" // Deveria ser: "Leitura do mês já confirmada"
       });
     }
@@ -134,6 +132,57 @@ class MeasureController {
 
     return res.status(200).json({
       success: true
+    });
+  }
+
+  async list(req: Request, res: Response): Promise<Response> {
+
+    const { customer_code } = req.params;
+    const { measure_type } = req.query;
+
+    const client = await Client.findOne({ where: { customer_code } });
+
+    if (!client) {
+      return res.status(404).json({
+        error_code: "MEASURES_NOT_FOUND",
+        error_description: `Nenhuma leitura encontrada`
+      });
+    }
+
+    let filter: any = { where: { idClient: client.id } };
+
+    if (measure_type) {
+      const type = String(measure_type).toUpperCase(); // Converte para maiúsculas para case insensitive
+      if (type === 'WATER' || type === 'GAS') {
+        filter.where.type = type; // Filtra pelo tipo específico
+      } else {
+        return res.status(400).json({
+          error_code: "INVALID_TYPE",
+          error_description: `Tipo de medição não permitida`
+        });
+      }
+    }
+
+    const measures = await Measure.findAll(filter);
+
+    if (measures.length === 0) {
+      return res.status(404).json({
+        error_code: "MEASURES_NOT_FOUND",
+        error_description: `Nenhuma leitura encontrada`
+      });
+    }
+
+    const transformedMeasures = measures.map((measure: any) => ({
+      measure_uuid: measure.uuid,
+      measure_datetime: measure.measure_datetime,
+      measure_type: measure.type,
+      has_confirmed: measure.hasConfirmed,
+      image_url: measure.imageUrl
+    }));
+
+    return res.status(200).json({
+      customer_code,
+      measures: transformedMeasures
     });
   }
 }
