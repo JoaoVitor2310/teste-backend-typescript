@@ -7,6 +7,7 @@ interface MeasureAttributes {
   uuid: string;
   createdAt: Date;
   updatedAt: Date;
+  measure_datetime: Date;
   type: 'gas' | 'water';
   hasConfirmed: boolean;
   value: number;
@@ -21,6 +22,7 @@ class Measure extends Model<MeasureAttributes, MeasureCreationAttributes> implem
   declare uuid: string;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare measure_datetime: Date;
   declare type: 'gas' | 'water';
   declare hasConfirmed: boolean;
   declare value: number;
@@ -49,6 +51,11 @@ Measure.init({
   },
   updatedAt: {
     type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  measure_datetime: {
+    type: DataTypes.DATE,
+    allowNull: false,
     defaultValue: DataTypes.NOW,
   },
   type: {
