@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UploadMeasure, uploadMeasureSchema } from '../schemas/uploadMeasureSchema';
+import { ConfirmMeasure, confirmMeasureSchema } from '../schemas/confirmMeasureSchema';
 import { GeminiService } from '../services/GeminiService';
 import { ImageService } from '../services/ImageService';
 import { v4 as uuidv4 } from 'uuid';
@@ -69,9 +70,10 @@ class MeasureController {
 
     try {
       const measure_value = await this.geminiService.fetchGeminiData(image);
-  
+      if (!measure_value) throw 'Failed to fetch Gemini data';
+
       const measure_uuid = uuidv4();
-  
+
       // Salvar no banco
       const measure = await Measure.create({
         uuid: measure_uuid,
@@ -81,26 +83,58 @@ class MeasureController {
         idClient: client.id,
         hasConfirmed: false,
       });
-  
+
       return res.status(200).json({
         image_url,
         measure_value,
         measure_uuid,
       });
-      
+
     } catch (error) {
+      console.log('inicio');
       console.log(error);
-      return res.status(400).json({
-        "error_code": "INVALID_DATA",
-        "error_description": 'Erro do Google Gemini'
+      console.log('fim');
+      return res.status(500).json({
+        "error_code": "GEMINI_ERROR",
+        "error_description": error
       });
     }
   }
 
-  async confirm(req: Request, res: Response): Promise<Response> {
-    const { id } = req.params;
+  async confirm(req: Request<{}, {}, ConfirmMeasure>, res: Response): Promise<Response> {
+    const validation = confirmMeasureSchema.safeParse(req.body);
 
-    return res.status(200).json({ message: `Measure with ID: ${id}` });
+    if (!validation.success) {
+      return res.status(400).json({
+        "error_code": "INVALID_DATA",
+        "error_description": validation.error.errors[0].code
+      });
+    }
+
+    const { measure_uuid, confirmed_value } = validation.data;
+
+    const measure = await Measure.findOne({ where: { uuid: measure_uuid, value: confirmed_value } });
+
+    if (!measure) {
+      return res.status(404).json({
+        "error_code": "MEASURE_NOT_FOUND",
+        "error_description": "Leitura do mês já realizada" // Deveria ser: "Leitura do mês não encontrada"
+      });
+    }
+
+    if (measure.hasConfirmed) {
+      return res.status(409).json({
+        "error_code": "MEASURE_ALREADY_CONFIRMED",
+        "error_description": "Leitura do mês já realizada" // Deveria ser: "Leitura do mês já confirmada"
+      });
+    }
+
+    measure.hasConfirmed = true;
+    await measure.save();
+
+    return res.status(200).json({
+      success: true
+    });
   }
 }
 
