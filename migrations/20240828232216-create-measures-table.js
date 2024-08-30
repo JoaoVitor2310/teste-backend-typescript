@@ -18,6 +18,11 @@ module.exports = {
         defaultValue: Sequelize.NOW,
         allowNull: false,
       },
+      updatedAt: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+        allowNull: false,
+      },
       type: {
         type: Sequelize.ENUM('gas', 'water'),
         allowNull: false,

@@ -1,8 +1,14 @@
 import express from "express";
+import bodyParser from 'body-parser';
 import sequelize from './config/database';
 import router from './routes';
+import path from 'path';
 
 const server = express();
+
+server.use(bodyParser.json({ limit: '10mb' }));
+server.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+server.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 server.use(express.json());
 

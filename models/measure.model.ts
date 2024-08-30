@@ -1,11 +1,12 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/database';
+import sequelize from '../src/config/database';
 import Client from './client.model';
 
 interface MeasureAttributes {
   id: number;
   uuid: string;
   createdAt: Date;
+  updatedAt: Date;
   type: 'gas' | 'water';
   hasConfirmed: boolean;
   value: number;
@@ -13,12 +14,13 @@ interface MeasureAttributes {
   idClient: number;
 }
 
-interface MeasureCreationAttributes extends Optional<MeasureAttributes, 'id' | 'createdAt'> {}
+interface MeasureCreationAttributes extends Optional<MeasureAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
 class Measure extends Model<MeasureAttributes, MeasureCreationAttributes> implements MeasureAttributes {
   declare id: number;
   declare uuid: string;
   declare createdAt: Date;
+  declare updatedAt: Date;
   declare type: 'gas' | 'water';
   declare hasConfirmed: boolean;
   declare value: number;
@@ -42,6 +44,10 @@ Measure.init({
     unique: true,
   },
   createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },

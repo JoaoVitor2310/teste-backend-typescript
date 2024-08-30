@@ -12,4 +12,6 @@ COPY . .
 
 EXPOSE 3000
 
+# RUN yarn migrate
+
 CMD sh -c "npm rebuild esbuild && yarn dev"
