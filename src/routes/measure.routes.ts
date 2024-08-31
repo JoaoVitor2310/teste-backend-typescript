@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import MeasureController from '../controllers/MeasureController';
+import MeasureController from '../controllers/measureController';
 
 
 const router = Router();

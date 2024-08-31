@@ -12,6 +12,6 @@ COPY . .
 
 EXPOSE 3000
 
-# RUN yarn migrate
+RUN npm install sequelize-cli
 
-CMD sh -c "npm rebuild esbuild && yarn dev"
+CMD sh -c "npm rebuild esbuild && yarn migrate && yarn dev"

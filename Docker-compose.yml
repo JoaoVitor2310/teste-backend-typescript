@@ -1,29 +1,43 @@
-version: '3'
 services:
-  db:
+  database:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: teste-node-type
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - dbdata:/var/lib/mysql
-
+    networks:
+      - my_network
+      
   app:
       build: .
       restart: unless-stopped
       ports:
         - "3000:3000"
       depends_on:
-        - db
+        database:
+          condition: service_healthy
       environment:
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=password
-      - DB_NAME=teste-node-type
+        - DB_HOST=database
+        - DB_USER=root
+        - DB_PASSWORD=password
+        - DB_NAME=teste-node-type
       volumes:
       - .:/app
-
+      networks:
+        - my_network
+      
 volumes:
   dbdata:
+
+networks:
+  my_network:
+    driver: host
